@@ -4,6 +4,8 @@ import { ProductShowcase } from '@/components/landing/product-showcase'
 import { FinancialGoalsSection } from '@/components/landing/financial-goals'
 import { AnalyticsSection } from '@/components/landing/analytics-section'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
+import { FinalCTASection } from '@/components/landing/final-cta-section'
+import { Footer } from '@/components/landing/footer'
 
 function App() {
   return (
@@ -14,6 +16,8 @@ function App() {
       <FinancialGoalsSection />
       <AnalyticsSection />
       <HowItWorksSection />
+      <FinalCTASection />
+      <Footer />
     </>
   )
 }
