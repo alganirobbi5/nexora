@@ -60,7 +60,7 @@ const DashboardPreview = () => {
   const chartHeight = isMobile ? 140 : isTablet ? 160 : 180
 
   return (
-    <div className="bg-surface border border-surface-border/20 rounded-2xl overflow-hidden shadow-lg">
+    <div className="bg-surface border border-surface-border/20 rounded-2xl overflow-hidden shadow-2xl">
       <div className="bg-surface-border/5 px-5 py-4 border-b border-surface-border/20 flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <div className="w-10 h-10 rounded-xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center flex-shrink-0">
@@ -394,11 +394,11 @@ export const HeroFinancial = () => {
         </header>
       )}
 
-      <div className="relative z-10 flex-1 flex flex-col items-center px-4 py-8 lg:py-12">
+      <div className="relative z-10 flex-1 flex flex-col items-center px-4 py-6 lg:py-10">
         <TimelineAnimation
           timelineRef={timelineRef}
           animationNum={2}
-          className="mb-3.5 inline-flex items-center gap-2 rounded-full bg-surface border border-surface-border/20 px-3 py-1 text-sm font-medium text-text-secondary shadow-sm"
+          className="mb-2.5 inline-flex items-center gap-2 rounded-full bg-surface border border-surface-border/20 px-3 py-1 text-sm font-medium text-text-secondary shadow-sm"
         >
           <span className="bg-brand-100 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300 px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wider">
             New
@@ -411,7 +411,7 @@ export const HeroFinancial = () => {
           id="hero-heading"
           timelineRef={timelineRef}
           animationNum={3}
-          className="mb-3.5 text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-text-primary max-w-5xl leading-[1.1]"
+          className="mb-2.5 text-center text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-text-primary max-w-5xl leading-[1.1]"
         >
           Take control of your money.{' '}
           <span className="text-brand-600">Build better habits.</span>
@@ -421,7 +421,7 @@ export const HeroFinancial = () => {
           as="p"
           timelineRef={timelineRef}
           animationNum={4}
-          className="mb-6 text-center text-lg sm:text-xl md:text-2xl text-text-secondary font-medium max-w-2xl mx-auto leading-relaxed px-4"
+          className="mb-4 text-center text-lg sm:text-xl md:text-2xl text-text-secondary font-medium max-w-2xl mx-auto leading-relaxed px-4"
         >
           Manage your money, goals, and daily tasks from one focused workspace.
         </TimelineAnimation>
@@ -429,7 +429,7 @@ export const HeroFinancial = () => {
         <TimelineAnimation
           timelineRef={timelineRef}
           animationNum={5}
-          className="mb-7 lg:mb-9 flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs"
+          className="mb-5 lg:mb-7 flex flex-col sm:flex-row gap-3 justify-center w-full max-w-xs"
         >
           <Button
             size="lg"
@@ -446,16 +446,18 @@ export const HeroFinancial = () => {
           </Button>
         </TimelineAnimation>
 
-        <p className="text-center text-text-tertiary text-sm mb-6 lg:mb-8">
+        <p className="text-center text-text-tertiary text-sm mb-4 lg:mb-6">
           No credit card required · 14-day free trial · Cancel anytime
         </p>
 
         <TimelineAnimation
           timelineRef={timelineRef}
           animationNum={6}
-          className="w-full max-w-7xl"
+          className="w-full max-w-[900px]"
         >
-          <DashboardPreview />
+          <div className="relative bg-surface/50 backdrop-blur-xl border border-surface-border/20 rounded-3xl shadow-2xl shadow-brand-500/5 p-1 ring-1 ring-inset ring-brand-500/10">
+            <DashboardPreview />
+          </div>
         </TimelineAnimation>
       </div>
     </section>
