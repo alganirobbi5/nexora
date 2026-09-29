@@ -3,16 +3,16 @@ import {
   authenticatedGet,
   authenticatedPost,
   getJson,
-} from "./api"
+} from "./api";
 
 import type {
   AuthResponse,
   LoginPayload,
   RegisterPayload,
   User,
-} from "./api"
+} from "./api";
 
-let currentUser: User | null = null
+let currentUser: User | null = null;
 
 /**
  * Registers a new user.
@@ -23,76 +23,75 @@ export async function register(
 ): Promise<User> {
   const response = await authenticatedPost("/api/register", {
     body: JSON.stringify(data),
-  })
+  });
 
-  const result = await getJson<AuthResponse>(response)
+  const result = await getJson<AuthResponse>(response);
 
-  currentUser = result.user
+  currentUser = result.user;
 
-  return result.user
+  return result.user;
 }
 
 /**
- * Logs in an existing user using the Laravel session.
+ * Logs in an existing user.
  */
-export async function login(
-  data: LoginPayload,
-): Promise<User> {
+export async function login(data: LoginPayload): Promise<User> {
   const response = await authenticatedPost("/api/login", {
     body: JSON.stringify(data),
-  })
+  });
 
-  const result = await getJson<AuthResponse>(response)
+  const result = await getJson<AuthResponse>(response);
 
-  currentUser = result.user
+  // Regenerate session
+  const response2 = await authenticatedPost("/api/login", {
+    body: JSON.stringify(data),
+  });
 
-  return result.user
+  currentUser = result.user;
+
+  return result.user;
 }
 
 /**
- * Logs out the authenticated user and clears local session state.
+ * Logs out the current user.
  */
 export async function logout(): Promise<void> {
-  const response = await authenticatedPost("/api/logout")
-
-  await getJson<{ message: string }>(response)
-
-  currentUser = null
+  await authenticatedPost("/api/logout");
+  currentUser = null;
 }
 
 /**
- * Returns the current authenticated user.
- *
- * A 401 means there is no authenticated session.
- * Other errors are re-thrown so network/server problems are not silently
- * treated as "logged out".
+ * Gets the current authenticated user.
  */
 export async function getCurrentUser(): Promise<User | null> {
   if (currentUser) {
-    return currentUser
+    return currentUser;
   }
 
   try {
-    const response = await authenticatedGet("/api/user")
-    const user = await getJson<User>(response)
+    const response = await authenticatedGet("/api/user");
 
-    currentUser = user
+    const user = await getJson<User>(response);
 
-    return user
+    currentUser = user;
+
+    return user;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
-      currentUser = null
+      currentUser = null;
 
-      return null
+      return null;
     }
 
-    throw error
+    throw error;
   }
 }
 
-export type {
-  AuthResponse,
-  LoginPayload,
-  RegisterPayload,
-  User,
+/**
+ * Refreshes the current user.
+ */
+export async function refreshUser(): Promise<User | null> {
+  return getCurrentUser();
 }
+
+export type { AuthResponse, LoginPayload, RegisterPayload, User };
