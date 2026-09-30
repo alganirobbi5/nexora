@@ -1,6 +1,10 @@
 import { Button } from '@/components/ui/button'
 
-export function FinalCTASection() {
+type FinalCTASectionProps = {
+  onStart?: () => void
+}
+
+export function FinalCTASection({ onStart }: FinalCTASectionProps) {
   return (
     <section
       className="relative py-12 lg:py-16 bg-bg-primary text-text-primary"
@@ -21,6 +25,7 @@ export function FinalCTASection() {
         <Button
           className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3 sm:py-4 bg-brand-600 hover:bg-brand-700 text-white font-medium text-lg rounded-xl transition-colors shadow-lg shadow-brand-500/25"
           aria-label="Start for free"
+          onClick={onStart}
         >
           Start for free
           <svg

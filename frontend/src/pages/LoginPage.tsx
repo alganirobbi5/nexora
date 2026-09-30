@@ -5,7 +5,11 @@ import { Input } from "@/components/ui/input"
 import useAuthState from "@/hooks/useAuthState"
 import { ApiError } from "@/lib/api"
 
-export default function LoginPage() {
+type LoginPageProps = {
+  onCreateAccount?: () => void
+}
+
+export default function LoginPage({ onCreateAccount }: LoginPageProps) {
   const { login } = useAuthState()
 
   const [email, setEmail] = useState("")
@@ -197,6 +201,7 @@ export default function LoginPage() {
             <button
               type="button"
               className="font-medium text-blue-400 hover:text-blue-300"
+              onClick={onCreateAccount}
             >
               Create one
             </button>

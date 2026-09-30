@@ -6,7 +6,12 @@ import { Input } from '@/components/ui/input'
 import useAuthState from '@/hooks/useAuthState'
 
 
-export default function RegisterPage() {
+type RegisterPageProps = {
+  onSignIn?: () => void
+  onBack?: () => void
+}
+
+export default function RegisterPage({ onSignIn, onBack }: RegisterPageProps) {
   const { register } = useAuthState()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -187,10 +192,17 @@ export default function RegisterPage() {
             <a
               href="#"
               className="underline underline-offset-4 hover:text-primary"
+              onClick={onSignIn}
             >
               Already have an account? Sign in
             </a>
           </p>
+          <button
+            onClick={onBack}
+            className="mt-2 text-xs text-slate-400 dark:text-slate-600 underline"
+          >
+            Close
+          </button>
         </form>
       </div>
     </div>
