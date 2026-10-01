@@ -177,3 +177,15 @@ export async function getJson<T>(response: Response): Promise<T> {
 
   return response.json() as Promise<T>
 }
+
+export interface DashboardSummary {
+  balance: number
+  income: number
+  expenses: number
+  active_goals: number
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  const response = await authenticatedGet("/api/dashboard")
+  return (await getJson<DashboardSummary>(response)) as DashboardSummary
+}
