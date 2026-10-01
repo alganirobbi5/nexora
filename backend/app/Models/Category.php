@@ -10,7 +10,7 @@ class Category extends Model
     protected function casts(): array
     {
         return [
-            'type' => 'income|expense',
+            'type' => 'string',
         ];
     }
 
