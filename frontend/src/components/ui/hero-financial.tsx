@@ -284,7 +284,9 @@ const DashboardPreview = () => {
   )
 }
 
-export const HeroFinancial = () => {
+export const HeroFinancial = ({ onStart }: { onStart?: () => void }) => {
+  const handleStart = onStart
+
   const timelineRef = React.useRef<HTMLDivElement>(null)
   const isMobile = useMediaQuery('(max-width: 768px)', { defaultMatches: false })
 
@@ -343,7 +345,7 @@ export const HeroFinancial = () => {
               </a>
             </nav>
           </MotionDrawer>
-          <Button className="bg-text-primary text-text-inverse hover:bg-text-primary/90 hidden sm:flex">
+          <Button className="bg-text-primary text-text-inverse hover:bg-text-primary/90 hidden sm:flex" onClick={() => handleStart && handleStart()}>
             Start for free <ChevronRight size={16} className="ml-1" />
           </Button>
         </div>

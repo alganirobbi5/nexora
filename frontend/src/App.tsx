@@ -22,7 +22,7 @@ function App() {
 
   return (
     <>
-      <HeroFinancial />
+      <HeroFinancial onStart={() => setView('auth')} />
       <FeaturesSection />
       <ProductShowcase />
       <FinancialGoalsSection />
