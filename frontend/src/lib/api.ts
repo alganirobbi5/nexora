@@ -26,6 +26,18 @@ export interface User {
   updated_at: string
 }
 
+export interface Transaction {
+  id: number
+  user_id: number
+  category_id: number | null
+  type: "income" | "expense"
+  amount: number
+  description: string | null
+  transaction_date: string
+  created_at: string
+  updated_at: string
+}
+
 export interface AuthResponse {
   user: User
 }
@@ -188,4 +200,12 @@ export interface DashboardSummary {
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const response = await authenticatedGet("/api/dashboard")
   return (await getJson<DashboardSummary>(response)) as DashboardSummary
+}
+
+/**
+ * Fetches all transactions from the backend.
+ */
+export async function getTransactions(): Promise<Transaction[]> {
+  const response = await authenticatedGet("/api/transactions")
+  return getJson<Transaction[]>(response)
 }
