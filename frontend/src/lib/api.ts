@@ -209,3 +209,127 @@ export async function getTransactions(): Promise<Transaction[]> {
   const response = await authenticatedGet("/api/transactions")
   return getJson<Transaction[]>(response)
 }
+
+// ==========================================================
+// Tasks
+// ==========================================================
+
+export interface Task {
+  id: number
+  user_id: number
+  title: string
+  description: string | null
+  status: "pending" | "completed"
+  priority: "low" | "medium" | "high"
+  due_at: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CreateTaskPayload {
+  title: string
+  description?: string | null
+  status?: "pending" | "completed"
+  priority?: "low" | "medium" | "high"
+  due_at?: string | null
+}
+
+export interface UpdateTaskPayload {
+  title?: string
+  description?: string | null
+  status?: "pending" | "completed"
+  priority?: "low" | "medium" | "high"
+  due_at?: string | null
+}
+
+/**
+ * Makes an authenticated PUT request protected by Sanctum CSRF.
+ */
+export async function authenticatedPut(
+  url: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const xsrfToken = await getXsrfToken()
+  const headers = new Headers(init.headers)
+
+  headers.set("Accept", "application/json")
+  headers.set("Content-Type", "application/json")
+
+  if (xsrfToken) {
+    headers.set("X-XSRF-TOKEN", xsrfToken)
+  }
+
+  return fetch(`${BASE_URL}${url}`, {
+    ...init,
+    method: "PUT",
+    credentials: "include",
+    headers,
+  })
+}
+
+/**
+ * Makes an authenticated DELETE request protected by Sanctum CSRF.
+ */
+export async function authenticatedDelete(
+  url: string,
+): Promise<Response> {
+  const xsrfToken = await getXsrfToken()
+  const headers = new Headers()
+
+  headers.set("Accept", "application/json")
+
+  if (xsrfToken) {
+    headers.set("X-XSRF-TOKEN", xsrfToken)
+  }
+
+  return fetch(`${BASE_URL}${url}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers,
+  })
+}
+
+/**
+ * Fetches all tasks for the authenticated user.
+ */
+export async function getTasks(): Promise<Task[]> {
+  const response = await authenticatedGet("/api/tasks")
+
+  return getJson<Task[]>(response)
+}
+
+/**
+ * Creates a new task.
+ */
+export async function createTask(
+  payload: CreateTaskPayload,
+): Promise<Task> {
+  const response = await authenticatedPost("/api/tasks", {
+    body: JSON.stringify(payload),
+  })
+
+  return getJson<Task>(response)
+}
+
+/**
+ * Updates an existing task.
+ */
+export async function updateTask(
+  id: number,
+  payload: UpdateTaskPayload,
+): Promise<Task> {
+  const response = await authenticatedPut(`/api/tasks/${id}`, {
+    body: JSON.stringify(payload),
+  })
+
+  return getJson<Task>(response)
+}
+
+/**
+ * Deletes a task.
+ */
+export async function deleteTask(id: number): Promise<void> {
+  const response = await authenticatedDelete(`/api/tasks/${id}`)
+
+  await handleResponse(response)
+}
