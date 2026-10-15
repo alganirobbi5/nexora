@@ -102,7 +102,7 @@ export function TasksPanel() {
         {tasks.map((task) => (
           <div
             key={task.id}
-            className="rounded-xl border p-4"
+            className="rounded-xl border p-4 hover:border-gray-300 dark:hover:border-gray-600 transition-colors"
           >
             {editingId === task.id ? (
               <EditTaskForm

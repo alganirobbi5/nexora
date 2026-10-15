@@ -110,9 +110,7 @@ export default function TransactionsPanel() {
       <AddTransactionForm onCreated={handleCreate} />
 
       {error ? (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
-          {error}
-        </div>
+        <p className="text-sm text-destructive mb-2">{error}</p>
       ) : null}
 
       {isLoading ? (
