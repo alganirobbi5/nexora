@@ -457,7 +457,7 @@ export const HeroFinancial = ({ onStart, setView }: { onStart?: () => void; setV
             variant="outline"
             onClick={() =>
             document
-            .getElementById('features')
+            .getElementById('demo')
             ?.scrollIntoView({ behavior: 'smooth' })
           }
            className="w-full sm:w-auto border-surface-border/20 hover:bg-surface-hover"
@@ -475,7 +475,9 @@ export const HeroFinancial = ({ onStart, setView }: { onStart?: () => void; setV
           className="w-full max-w-[900px]"
         >
           <div className="relative bg-surface/50 backdrop-blur-xl border border-surface-border/20 rounded-3xl shadow-2xl shadow-brand-500/5 p-1 ring-1 ring-inset ring-brand-500/10">
-            <DashboardPreview />
+            <div id="demo">
+              <DashboardPreview />
+            </div>
           </div>
         </TimelineAnimation>
       </div>
