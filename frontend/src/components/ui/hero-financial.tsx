@@ -284,7 +284,7 @@ const DashboardPreview = () => {
   )
 }
 
-export const HeroFinancial = ({ onStart }: { onStart?: () => void }) => {
+export const HeroFinancial = ({ onStart, setView }: { onStart?: () => void; setView?: React.Dispatch<React.SetStateAction<'landing' | 'auth' | 'app'>> }) => {
   const handleStart = onStart
 
   const timelineRef = React.useRef<HTMLDivElement>(null)
@@ -385,7 +385,7 @@ export const HeroFinancial = ({ onStart }: { onStart?: () => void }) => {
               </a>
             </nav>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="hidden sm:flex">
+              <Button variant="ghost" size="sm" className="hidden sm-flex" onClick={() => setView && setView('auth')}>
                 Sign in
               </Button>
               <Button className="bg-text-primary text-text-inverse hover:bg-text-primary/90">
