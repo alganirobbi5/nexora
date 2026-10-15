@@ -17,8 +17,8 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-function formatDeadline(deadline: string | null): string {
-  if (!deadline) {
+function formatDeadline(date: string | null): string {
+  if (!date) {
     return ""
   }
 
@@ -26,33 +26,22 @@ function formatDeadline(deadline: string | null): string {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(new Date(deadline))
+  }).format(new Date(date))
 }
 
-function getProgress(goal: FinancialGoal): number {
+function getProgressDisplay(goal: FinancialGoal): number {
   if (goal.target_amount <= 0) {
     return 0
   }
-
-  return Math.min(
-    Math.max(
-      (goal.current_amount / goal.target_amount) * 100,
-      0,
-    ),
-    100,
-  )
+  return Math.min(Math.max((goal.current_amount / goal.target_amount) * 100, 0), 100)
 }
 
 export default function FinancialGoalsPanel() {
   const [goals, setGoals] = useState<FinancialGoal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<number | null>(
-    null,
-  )
-  const [deletingId, setDeletingId] = useState<number | null>(
-    null,
-  )
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   useEffect(() => {
     async function loadGoals() {
@@ -120,9 +109,7 @@ export default function FinancialGoalsPanel() {
       <AddFinancialGoalForm onCreated={handleCreated} />
 
       {error ? (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
-          {error}
-        </div>
+        <p className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</p>
       ) : null}
 
       {isLoading ? (
@@ -134,13 +121,11 @@ export default function FinancialGoalsPanel() {
           </p>
         </div>
       ) : goals.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            No financial goals yet
-          </p>
-        </div>
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          No financial goals yet
+        </p>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4 max-w-full">
           {goals.map((goal) => {
             if (editingId === goal.id) {
               return (
@@ -153,16 +138,16 @@ export default function FinancialGoalsPanel() {
               )
             }
 
-            const progress = getProgress(goal)
+            const progressDisplay = getProgressDisplay(goal)
 
             return (
               <div
                 key={goal.id}
                 className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100 line-clamp-1">
                       {goal.title}
                     </h3>
 
@@ -179,40 +164,38 @@ export default function FinancialGoalsPanel() {
                   </Badge>
                 </div>
 
-                <div className="mt-4">
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Progress
-                      </p>
+                <div className="mt-3 flex items-end gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Progress
+                    </p>
 
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {formatCurrency(goal.current_amount)}
-                        {" / "}
-                        {formatCurrency(goal.target_amount)}
-                      </p>
-                    </div>
-
-                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      {Math.round(progress)}%
-                    </span>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {formatCurrency(goal.current_amount)}
+                      {" / "}
+                      {formatCurrency(goal.target_amount)}
+                    </p>
                   </div>
 
-                  <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
-                    <div
-                      className="h-full rounded-full bg-gray-900 transition-[width] dark:bg-gray-100"
-                      style={{
-                        width: `${progress}%`,
-                      }}
-                    />
-                  </div>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {Math.round(progressDisplay)}%
+                  </span>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                  <div
+                    className="h-full rounded-full bg-gray-900 transition-[width] ease-[width] duration-750 dark:bg-gray-100"
+                    style={{
+                      width: `${progressDisplay}%`,
+                    }}
+                  />
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2 justify-end">
                   <button
                     type="button"
                     onClick={() => setEditingId(goal.id)}
-                    className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                    className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
                     Edit
                   </button>
@@ -221,7 +204,7 @@ export default function FinancialGoalsPanel() {
                     type="button"
                     onClick={() => void handleDelete(goal.id)}
                     disabled={deletingId === goal.id}
-                    className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+                    className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
                   >
                     {deletingId === goal.id
                       ? "Deleting..."

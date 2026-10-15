@@ -178,7 +178,7 @@ export default function AddFinancialGoalForm({
         <select
           name="status"
           value={state.status}
-          onChange={(e) =>setState((prev) => ({...prev,status: e.target.value as FormState['status'],  }))}
+          onChange={(e) => setState((prev) => ({ ...prev, status: e.target.value as FormState['status'] }))}
           className="w-full py-2 px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           required
           aria-invalid={!!state.errors.status}
