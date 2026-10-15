@@ -58,9 +58,9 @@ const cardShaderConfig = {
 
 export function FeaturesSection() {
   return (
-    <section
+<section
       className="relative w-full py-14 lg:py-20 bg-bg-secondary overflow-hidden"
-      aria-labelledby="features-heading"
+      id="features"
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
         <div

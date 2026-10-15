@@ -2,8 +2,9 @@
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import HeroFinancial from '@/components/ui/hero-financial'
-import { FeaturesSection } from '@/components/landing/features-section'
-import { ProductShowcase } from '@/components/landing/product-showcase'
+import { FeaturesSection } from "@/components/landing/features-section"
+import PricingSection from "@/components/landing/pricing-section"
+import { ProductShowcase } from "@/components/landing/product-showcase"
 import { FinancialGoalsSection } from '@/components/landing/financial-goals'
 import { AnalyticsSection } from '@/components/landing/analytics-section'
 import { HowItWorksSection } from '@/components/landing/how-it-works-section'
@@ -46,6 +47,7 @@ function App() {
       <FinancialGoalsSection />
       <AnalyticsSection />
       <HowItWorksSection />
+      <PricingSection onStart={() => setView("auth")} />
       <FinalCTASection onStart={() => setView('auth')} />
       <Footer />
     </>

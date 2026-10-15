@@ -385,13 +385,23 @@ export const HeroFinancial = ({ onStart, setView }: { onStart?: () => void; setV
               </a>
             </nav>
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="sm" className="hidden sm-flex" onClick={() => setView && setView('auth')}>
-                Sign in
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden sm:flex"
+                onClick={() => setView?.('auth')}
+             > Sign in
               </Button>
-              <Button className="bg-text-primary text-text-inverse hover:bg-text-primary/90">
-                Start for free <ChevronRight size={16} className="ml-1" />
-              </Button>
-            </div          >
+
+  <Button
+    className="bg-text-primary text-text-inverse hover:bg-text-primary/90"
+    type="button"
+    onClick={handleStart}
+  >
+    Start for free
+    <ChevronRight size={16} className="ml-1" />
+  </Button>
+</div>
           </TimelineAnimation>
         </header>
       )}
@@ -436,15 +446,22 @@ export const HeroFinancial = ({ onStart, setView }: { onStart?: () => void; setV
           <Button
             size="lg"
             className="w-full sm:w-auto bg-brand-600 hover:bg-brand-700 text-white shadow-lg shadow-brand-500/25 gap-2"
+            type="button"
+            onClick={handleStart}
           >
             Start for free <ArrowRight size={18} />
           </Button>
           <Button
+            type="button"
             size="lg"
             variant="outline"
-            className="w-full sm:w-auto border-surface-border/20 hover:bg-surface-hover"
-          >
-            Explore demo
+            onClick={() =>
+            document
+            .getElementById('features')
+            ?.scrollIntoView({ behavior: 'smooth' })
+          }
+           className="w-full sm:w-auto border-surface-border/20 hover:bg-surface-hover"
+           >Explore demo
           </Button>
         </TimelineAnimation>
 
