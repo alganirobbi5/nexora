@@ -26,18 +26,6 @@ export interface User {
   updated_at: string
 }
 
-export interface Transaction {
-  id: number
-  user_id: number
-  category_id: number | null
-  type: "income" | "expense"
-  amount: number
-  description: string | null
-  transaction_date: string
-  created_at: string
-  updated_at: string
-}
-
 export interface AuthResponse {
   user: User
 }
@@ -61,9 +49,6 @@ export class ApiError extends Error {
   }
 }
 
-/**
- * Throws ApiError when a response is not successful.
- */
 async function handleResponse(response: Response): Promise<void> {
   if (response.ok) {
     return
@@ -87,9 +72,6 @@ async function handleResponse(response: Response): Promise<void> {
   )
 }
 
-/**
- * Initializes Laravel Sanctum CSRF protection.
- */
 export async function initializeCsrf(): Promise<void> {
   const response = await fetch(`${BASE_URL}/sanctum/csrf-cookie`, {
     method: "GET",
@@ -102,9 +84,6 @@ export async function initializeCsrf(): Promise<void> {
   await handleResponse(response)
 }
 
-/**
- * Reads the XSRF-TOKEN cookie.
- */
 function readXsrfToken(): string | null {
   const cookie = document.cookie
     .split("; ")
@@ -114,24 +93,20 @@ function readXsrfToken(): string | null {
     return null
   }
 
-  const value = cookie.substring("XSRF-TOKEN=".length)
-
-  return decodeURIComponent(value)
+  return decodeURIComponent(
+    cookie.substring("XSRF-TOKEN=".length),
+  )
 }
 
-/**
- * Initializes CSRF protection and returns the current XSRF token.
- */
 export async function getXsrfToken(): Promise<string | null> {
   await initializeCsrf()
 
   return readXsrfToken()
 }
 
-/**
- * Makes an authenticated GET request.
- */
-export async function authenticatedGet(url: string): Promise<Response> {
+export async function authenticatedGet(
+  url: string,
+): Promise<Response> {
   return fetch(`${BASE_URL}${url}`, {
     method: "GET",
     credentials: "include",
@@ -141,9 +116,6 @@ export async function authenticatedGet(url: string): Promise<Response> {
   })
 }
 
-/**
- * Makes an authenticated POST request protected by Sanctum CSRF.
- */
 export async function authenticatedPost(
   url: string,
   init: RequestInit = {},
@@ -166,9 +138,47 @@ export async function authenticatedPost(
   })
 }
 
-/**
- * Makes a GET request without session credentials.
- */
+export async function authenticatedPut(
+  url: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const xsrfToken = await getXsrfToken()
+  const headers = new Headers(init.headers)
+
+  headers.set("Accept", "application/json")
+  headers.set("Content-Type", "application/json")
+
+  if (xsrfToken) {
+    headers.set("X-XSRF-TOKEN", xsrfToken)
+  }
+
+  return fetch(`${BASE_URL}${url}`, {
+    ...init,
+    method: "PUT",
+    credentials: "include",
+    headers,
+  })
+}
+
+export async function authenticatedDelete(
+  url: string,
+): Promise<Response> {
+  const xsrfToken = await getXsrfToken()
+  const headers = new Headers()
+
+  headers.set("Accept", "application/json")
+
+  if (xsrfToken) {
+    headers.set("X-XSRF-TOKEN", xsrfToken)
+  }
+
+  return fetch(`${BASE_URL}${url}`, {
+    method: "DELETE",
+    credentials: "include",
+    headers,
+  })
+}
+
 export async function unauthenticatedGet(
   url: string,
 ): Promise<Response> {
@@ -181,14 +191,17 @@ export async function unauthenticatedGet(
   })
 }
 
-/**
- * Validates the response and parses its JSON body.
- */
-export async function getJson<T>(response: Response): Promise<T> {
+export async function getJson<T>(
+  response: Response,
+): Promise<T> {
   await handleResponse(response)
 
   return response.json() as Promise<T>
 }
+
+// ==========================================================
+// Dashboard
+// ==========================================================
 
 export interface DashboardSummary {
   balance: number
@@ -199,15 +212,227 @@ export interface DashboardSummary {
 
 export async function getDashboardSummary(): Promise<DashboardSummary> {
   const response = await authenticatedGet("/api/dashboard")
-  return (await getJson<DashboardSummary>(response)) as DashboardSummary
+
+  return getJson<DashboardSummary>(response)
 }
 
-/**
- * Fetches all transactions from the backend.
- */
+// ==========================================================
+// Categories
+// ==========================================================
+
+export interface Category {
+  id: number
+  user_id: number
+  name: string
+  type: "income" | "expense"
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CreateCategoryPayload {
+  name: string
+  type: "income" | "expense"
+}
+
+export interface UpdateCategoryPayload {
+  name?: string
+  type?: "income" | "expense"
+}
+
+export async function getCategories(): Promise<Category[]> {
+  const response = await authenticatedGet("/api/categories")
+
+  return getJson<Category[]>(response)
+}
+
+export async function createCategory(
+  payload: CreateCategoryPayload,
+): Promise<Category> {
+  const response = await authenticatedPost("/api/categories", {
+    body: JSON.stringify(payload),
+  })
+
+  return getJson<Category>(response)
+}
+
+export async function updateCategory(
+  id: number,
+  payload: UpdateCategoryPayload,
+): Promise<Category> {
+  const response = await authenticatedPut(
+    `/api/categories/${id}`,
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<Category>(response)
+}
+
+export async function deleteCategory(
+  id: number,
+): Promise<void> {
+  const response = await authenticatedDelete(
+    `/api/categories/${id}`,
+  )
+
+  await handleResponse(response)
+}
+
+// ==========================================================
+// Transactions
+// ==========================================================
+
+export interface Transaction {
+  id: number
+  user_id: number
+  category_id: number | null
+  type: "income" | "expense"
+  amount: number
+  description: string | null
+  transaction_date: string
+  created_at: string
+  updated_at: string
+}
+
+export interface CreateTransactionPayload {
+  type: "income" | "expense"
+  amount: number
+  description?: string | null
+  transaction_date: string
+  category_id?: number | null
+}
+
+export interface UpdateTransactionPayload {
+  type?: "income" | "expense"
+  amount?: number
+  description?: string | null
+  transaction_date?: string
+  category_id?: number | null
+}
+
 export async function getTransactions(): Promise<Transaction[]> {
-  const response = await authenticatedGet("/api/transactions")
+  const response = await authenticatedGet(
+    "/api/transactions",
+  )
+
   return getJson<Transaction[]>(response)
+}
+
+export async function createTransaction(
+  payload: CreateTransactionPayload,
+): Promise<Transaction> {
+  const response = await authenticatedPost(
+    "/api/transactions",
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<Transaction>(response)
+}
+
+export async function updateTransaction(
+  id: number,
+  payload: UpdateTransactionPayload,
+): Promise<Transaction> {
+  const response = await authenticatedPut(
+    `/api/transactions/${id}`,
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<Transaction>(response)
+}
+
+export async function deleteTransaction(
+  id: number,
+): Promise<void> {
+  const response = await authenticatedDelete(
+    `/api/transactions/${id}`,
+  )
+
+  await handleResponse(response)
+}
+
+// ==========================================================
+// Financial Goals
+// ==========================================================
+
+export interface FinancialGoal {
+  id: number
+  user_id: number
+  title: string
+  target_amount: number
+  current_amount: number
+  deadline: string | null
+  status: "active" | "completed" | "archived"
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CreateFinancialGoalPayload {
+  title: string
+  target_amount: number
+  current_amount?: number
+  deadline?: string | null
+  status?: "active" | "completed" | "archived"
+}
+
+export interface UpdateFinancialGoalPayload {
+  title?: string
+  target_amount?: number
+  current_amount?: number
+  deadline?: string | null
+  status?: "active" | "completed" | "archived"
+}
+
+export async function getFinancialGoals(): Promise<
+  FinancialGoal[]
+> {
+  const response = await authenticatedGet(
+    "/api/financial-goals",
+  )
+
+  return getJson<FinancialGoal[]>(response)
+}
+
+export async function createFinancialGoal(
+  payload: CreateFinancialGoalPayload,
+): Promise<FinancialGoal> {
+  const response = await authenticatedPost(
+    "/api/financial-goals",
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<FinancialGoal>(response)
+}
+
+export async function updateFinancialGoal(
+  id: number,
+  payload: UpdateFinancialGoalPayload,
+): Promise<FinancialGoal> {
+  const response = await authenticatedPut(
+    `/api/financial-goals/${id}`,
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<FinancialGoal>(response)
+}
+
+export async function deleteFinancialGoal(
+  id: number,
+): Promise<void> {
+  const response = await authenticatedDelete(
+    `/api/financial-goals/${id}`,
+  )
+
+  await handleResponse(response)
 }
 
 // ==========================================================
@@ -242,65 +467,12 @@ export interface UpdateTaskPayload {
   due_at?: string | null
 }
 
-/**
- * Makes an authenticated PUT request protected by Sanctum CSRF.
- */
-export async function authenticatedPut(
-  url: string,
-  init: RequestInit = {},
-): Promise<Response> {
-  const xsrfToken = await getXsrfToken()
-  const headers = new Headers(init.headers)
-
-  headers.set("Accept", "application/json")
-  headers.set("Content-Type", "application/json")
-
-  if (xsrfToken) {
-    headers.set("X-XSRF-TOKEN", xsrfToken)
-  }
-
-  return fetch(`${BASE_URL}${url}`, {
-    ...init,
-    method: "PUT",
-    credentials: "include",
-    headers,
-  })
-}
-
-/**
- * Makes an authenticated DELETE request protected by Sanctum CSRF.
- */
-export async function authenticatedDelete(
-  url: string,
-): Promise<Response> {
-  const xsrfToken = await getXsrfToken()
-  const headers = new Headers()
-
-  headers.set("Accept", "application/json")
-
-  if (xsrfToken) {
-    headers.set("X-XSRF-TOKEN", xsrfToken)
-  }
-
-  return fetch(`${BASE_URL}${url}`, {
-    method: "DELETE",
-    credentials: "include",
-    headers,
-  })
-}
-
-/**
- * Fetches all tasks for the authenticated user.
- */
 export async function getTasks(): Promise<Task[]> {
   const response = await authenticatedGet("/api/tasks")
 
   return getJson<Task[]>(response)
 }
 
-/**
- * Creates a new task.
- */
 export async function createTask(
   payload: CreateTaskPayload,
 ): Promise<Task> {
@@ -311,9 +483,6 @@ export async function createTask(
   return getJson<Task>(response)
 }
 
-/**
- * Updates an existing task.
- */
 export async function updateTask(
   id: number,
   payload: UpdateTaskPayload,
@@ -325,11 +494,12 @@ export async function updateTask(
   return getJson<Task>(response)
 }
 
-/**
- * Deletes a task.
- */
-export async function deleteTask(id: number): Promise<void> {
-  const response = await authenticatedDelete(`/api/tasks/${id}`)
+export async function deleteTask(
+  id: number,
+): Promise<void> {
+  const response = await authenticatedDelete(
+    `/api/tasks/${id}`,
+  )
 
   await handleResponse(response)
 }

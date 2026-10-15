@@ -1,8 +1,16 @@
 import { useEffect, useState } from 'react'
-import { getTransactions } from '@/lib/api'
+
+import AddTransactionForm from '@/components/app/AddTransactionForm'
+import EditTransactionForm from '@/components/app/EditTransactionForm'
+import { deleteTransaction, getTransactions, } from '@/lib/api'
+import type { Transaction } from '@/lib/api'
 
 function formatRupiah(amount: number): string {
-  return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(amount)
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
 function formatDate(dateString: string): string {
@@ -14,83 +22,210 @@ function formatDate(dateString: string): string {
   })
 }
 
-interface TransactionRow {
-  id: number
-  type: 'income' | 'expense'
-  amount: number
-  description: string | null
-  transaction_date: string
-}
-
 export default function TransactionsPanel() {
-  const [transactions, setTransactions] = useState<TransactionRow[]>([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   useEffect(() => {
-    async function fetchTransactions() {
+    async function loadTransactions() {
+      setIsLoading(true)
+      setError(null)
+
       try {
-        setIsLoading(true)
-        setError(null)
         const data = await getTransactions()
         setTransactions(data)
-      } catch (err: any) {
-        setError(err.message || 'Failed to load transactions')
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load transactions',
+        )
       } finally {
         setIsLoading(false)
       }
     }
 
-    void fetchTransactions()
+    void loadTransactions()
   }, [])
 
-  if (isLoading) {
-    return (
-      <div className="p-4 text-center">
-        <div className="animate-spin h-6 w-6 mx-auto border-2 border-current border-transparent rounded-full" />
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">Loading transactions...</p>
-      </div>
-    )
+  function handleCreate(transaction: Transaction) {
+    setTransactions((current) => [
+      transaction,
+      ...current,
+    ])
   }
 
-  if (error) {
-    return (
-      <div className="p-4 text-center text-red-500 dark:text-red-400">
-        <p>{error}</p>
-      </div>
+  function handleUpdate(updated: Transaction) {
+    setTransactions((current) =>
+      current.map((transaction) =>
+        transaction.id === updated.id
+          ? updated
+          : transaction,
+      ),
     )
+
+    setEditingId(null)
   }
 
-  if (transactions.length === 0) {
-    return (
-      <div className="p-4 text-center text-gray-500 dark:text-gray-400">
-        <p>No transactions yet</p>
-      </div>
-    )
+  async function handleDelete(id: number) {
+    if (
+      !window.confirm(
+        'Are you sure you want to delete this transaction?',
+      )
+    ) {
+      return
+    }
+
+    setDeletingId(id)
+    setError(null)
+
+    try {
+      await deleteTransaction(id)
+
+      setTransactions((current) =>
+        current.filter(
+          (transaction) => transaction.id !== id,
+        ),
+      )
+
+      if (editingId === id) {
+        setEditingId(null)
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete transaction',
+      )
+    } finally {
+      setDeletingId(null)
+    }
   }
 
   return (
     <div className="space-y-4">
-      {transactions.map((tx) => (
-        <div key={tx.id} className="flex items-center gap-3 p-3 rounded-lg border">
-          <span className="w-10 h-10 rounded-md flex items-center justify-center text-sm font-medium">
-            {tx.type === 'income'
-              ? 'I'
-              : 'E'}
-            </span>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-gray-900 dark:text-gray-100 truncate">
-              {tx.description || 'Untitled transaction'}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {formatDate(tx.transaction_date)}
-            </p>
-          </div>
-          <span className="font-medium text-gray-600 dark:text-gray-300">
-            {formatRupiah(tx.amount)}
-          </span>
+      <AddTransactionForm onCreated={handleCreate} />
+
+      {error ? (
+        <div className="rounded-md bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/40 dark:text-red-400">
+          {error}
         </div>
-      ))}
+      ) : null}
+
+      {isLoading ? (
+        <div className="p-4 text-center">
+          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-current border-transparent" />
+
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-300">
+            Loading transactions...
+          </p>
+        </div>
+      ) : transactions.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center dark:border-gray-700">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No transactions yet
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {transactions.map((transaction) => {
+            if (editingId === transaction.id) {
+              return (
+                <div
+                  key={transaction.id}
+                  className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <EditTransactionForm
+                    transaction={transaction}
+                    onSaved={handleUpdate}
+                    onCancelled={() => setEditingId(null)}
+                  />
+                </div>
+              )
+            }
+
+            const isIncome =
+              transaction.type === 'income'
+
+            return (
+              <div
+                key={transaction.id}
+                className="flex flex-col gap-3 rounded-lg border border-gray-200 p-3 sm:flex-row sm:items-center dark:border-gray-700"
+              >
+                <div className="flex min-w-0 flex-1 items-center gap-3">
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-sm font-medium ${
+                      isIncome
+                        ? 'bg-green-100 text-green-800 dark:bg-green-950/50 dark:text-green-300'
+                        : 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300'
+                    }`}
+                  >
+                    {isIncome ? 'I' : 'E'}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium text-gray-900 dark:text-gray-100">
+                      {transaction.description ||
+                        'Untitled transaction'}
+                    </p>
+
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatDate(
+                        transaction.transaction_date,
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <span
+                    className={`whitespace-nowrap font-medium ${
+                      isIncome
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-red-600 dark:text-red-400'
+                    }`}
+                  >
+                    {isIncome ? '+' : '-'}
+                    {formatRupiah(transaction.amount)}
+                  </span>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEditingId(transaction.id)
+                      }
+                      className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleDelete(
+                          transaction.id,
+                        )
+                      }
+                      disabled={
+                        deletingId === transaction.id
+                      }
+                      className="text-sm text-red-600 hover:text-red-800 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      {deletingId === transaction.id
+                        ? 'Deleting...'
+                        : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 }
