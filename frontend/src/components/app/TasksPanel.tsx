@@ -83,7 +83,7 @@ export function TasksPanel() {
       <AddTaskForm onCreated={handleCreated} />
 
       {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive mb-2">{error}</p>
       ) : null}
 
       {loading ? (
@@ -94,7 +94,7 @@ export function TasksPanel() {
 
       {!loading && tasks.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Belum ada task
+          No tasks yet.
         </p>
       ) : null}
 
@@ -114,7 +114,7 @@ export function TasksPanel() {
               <div className="space-y-3">
                 <div className="flex items-start justify-between gap-4">
                   <div className="min-w-0">
-                    <h3 className="font-medium">
+                    <h3 className="font-medium line-clamp-1">
                       {task.title}
                     </h3>
 
@@ -157,9 +157,7 @@ export function TasksPanel() {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() =>
-                      setEditingId(task.id)
-                    }
+                    onClick={() => setEditingId(task.id)}
                   >
                     Edit
                   </Button>

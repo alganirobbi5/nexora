@@ -58,14 +58,16 @@ export function EditTaskForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Input
+<Input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
+        className="rounded-md border bg-background px-3 py-2 text-sm"
       />
 
       <Input
         value={description}
         onChange={(event) => setDescription(event.target.value)}
+        className="rounded-md border bg-background px-3 py-2 text-sm"
       />
 
       <select
@@ -99,10 +101,11 @@ export function EditTaskForm({
         type="datetime-local"
         value={dueAt}
         onChange={(event) => setDueAt(event.target.value)}
+        className="rounded-md border bg-background px-3 py-2 text-sm"
       />
 
       {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive mb-2">{error}</p>
       ) : null}
 
       <div className="flex gap-2">
@@ -114,6 +117,7 @@ export function EditTaskForm({
           type="button"
           variant="outline"
           onClick={onCancel}
+          disabled={saving}
         >
           Batal
         </Button>

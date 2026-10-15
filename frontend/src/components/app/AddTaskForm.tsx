@@ -54,16 +54,18 @@ export function AddTaskForm({ onCreated }: AddTaskFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <Input
+<Input
         value={title}
         onChange={(event) => setTitle(event.target.value)}
         placeholder="Judul task"
+        className="rounded-md border bg-background px-3 py-2 text-sm"
       />
 
       <Input
         value={description}
         onChange={(event) => setDescription(event.target.value)}
         placeholder="Deskripsi"
+        className="rounded-md border bg-background px-3 py-2 text-sm"
       />
 
       <select
@@ -84,15 +86,32 @@ export function AddTaskForm({ onCreated }: AddTaskFormProps) {
         type="datetime-local"
         value={dueAt}
         onChange={(event) => setDueAt(event.target.value)}
+        className="rounded-md border bg-background px-3 py-2 text-sm"
       />
 
       {error ? (
-        <p className="text-sm text-destructive">{error}</p>
+        <p className="text-sm text-destructive mb-2">{error}</p>
       ) : null}
 
-      <Button type="submit" disabled={saving}>
-        {saving ? "Menyimpan..." : "Tambah Task"}
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" disabled={saving}>
+          {saving ? "Menyimpan..." : "Tambah Task"}
+        </Button>
+
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setTitle("")
+            setDescription("")
+            setPriority("medium")
+            setDueAt("")
+          }}
+          disabled={saving}
+        >
+          Batal
+        </Button>
+      </div>
     </form>
   )
 }
