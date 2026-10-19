@@ -80,3 +80,26 @@ GET /api/health
 - Add production domains to `SANCTUM_STATEFUL_DOMAINS`
 - Set `APP_DEBUG=false`
 - Use HTTPS for the API base URL
+
+## Demo Data
+
+### How to Seed
+
+```bash
+cd backend
+php artisan db:seed --class=DemoSeeder
+```
+
+### Demo Account
+
+- **Email**: `demo@nexora.local`
+- **Password**: `password123`
+- **Warning**: Development / Demo only — do not use for production.
+
+### Seeded Data
+
+- 1 demo user
+- 7 categories (2 income, 5 expense)
+- 11 transactions (Indonesian Rupiah, recent dates)
+- 3 financial goals (Emergency Fund, New Laptop, Investment Fund)
+- 5 tasks (pending/completed, low/medium/high priority)
