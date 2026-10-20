@@ -1,13 +1,15 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\TransactionController;
+use App\Http\Controllers\CategoryBudgetController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FinancialGoalContributionController;
 use App\Http\Controllers\FinancialGoalController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TransactionController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,6 +29,14 @@ Route::get('/health', function () {
     ]);
 });
 
+// Category budget CRUD
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/budgets', [CategoryBudgetController::class, 'index']);
+    Route::post('/budgets', [CategoryBudgetController::class, 'store']);
+    Route::put('/budgets/{budget}', [CategoryBudgetController::class, 'update']);
+    Route::delete('/budgets/{budget}', [CategoryBudgetController::class, 'destroy']);
+});
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware('auth:sanctum');
 
@@ -43,6 +53,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/financial-goals', [FinancialGoalController::class, 'store']);
     Route::put('/financial-goals/{financialGoal}', [FinancialGoalController::class, 'update']);
     Route::delete('/financial-goals/{financialGoal}', [FinancialGoalController::class, 'destroy']);
+    Route::get('/financial-goals/{goal}/contributions', [FinancialGoalContributionController::class, 'index']);
+    Route::post('/financial-goals/{goal}/contributions', [FinancialGoalContributionController::class, 'store']);
+    Route::put('/financial-goals/{goal}/contributions/{contribution}', [FinancialGoalContributionController::class, 'update']);
+    Route::delete('/financial-goals/{goal}/contributions/{contribution}', [FinancialGoalContributionController::class, 'destroy']);
     Route::get('/tasks', [TaskController::class, 'index']);
     Route::post('/tasks', [TaskController::class, 'store']);
     Route::put('/tasks/{task}', [TaskController::class, 'update']);
