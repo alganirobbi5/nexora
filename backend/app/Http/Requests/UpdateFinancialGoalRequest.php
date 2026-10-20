@@ -16,6 +16,7 @@ class UpdateFinancialGoalRequest extends FormRequest
         return [
             'title' => ['sometimes', 'required', 'string', 'max:150'],
             'target_amount' => ['sometimes', 'required', 'integer', 'min:1'],
+            'opening_amount' => ['sometimes', 'integer', 'min:0'],
             'current_amount' => ['sometimes', 'integer', 'min:0'],
             'deadline' => ['nullable', 'date'],
             'status' => ['sometimes', 'in:active,completed,archived'],

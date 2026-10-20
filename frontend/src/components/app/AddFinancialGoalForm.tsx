@@ -5,7 +5,7 @@ import { createFinancialGoal } from '@/lib/api'
 interface FormErrors {
   title?: string
   target_amount?: string
-  current_amount?: string
+  opening_amount?: string
   deadline?: string
   status?: string
   general?: string
@@ -14,7 +14,7 @@ interface FormErrors {
 interface FormState {
   title: string
   target_amount: number
-  current_amount: number
+  opening_amount: number
   deadline: string
   status: 'active' | 'completed' | 'archived'
   isSubmitting: boolean
@@ -32,7 +32,7 @@ export default function AddFinancialGoalForm({
   const [state, setState] = useState<FormState>({
     title: '',
     target_amount: 1,
-    current_amount: 0,
+    opening_amount: 0,
     deadline: '',
     status: 'active',
     isSubmitting: false,
@@ -46,7 +46,7 @@ export default function AddFinancialGoalForm({
     const { name, value } = e.target
     setState((prev) => ({
       ...prev,
-      [name]: name === 'target_amount' || name === 'current_amount' ? Number(value) : value,
+      [name]: name === 'target_amount' || name === 'opening_amount' ? Number(value) : value,
     }))
   }
 
@@ -59,7 +59,7 @@ export default function AddFinancialGoalForm({
       const goal = await createFinancialGoal({
         title: state.title,
         target_amount: state.target_amount,
-        current_amount: state.current_amount,
+        opening_amount: state.opening_amount,
         deadline: state.deadline || null,
         status: state.status,
       })
@@ -67,7 +67,7 @@ export default function AddFinancialGoalForm({
       setState({
         title: '',
         target_amount: 1,
-        current_amount: 0,
+        opening_amount: 0,
         deadline: '',
         status: 'active',
         isSubmitting: false,
@@ -136,20 +136,22 @@ export default function AddFinancialGoalForm({
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
-          Current Amount
+          Saldo Awal (opsional)
         </label>
         <input
           type="number"
-          name="current_amount"
-          value={state.current_amount.toString()}
+          name="opening_amount"
+          value={state.opening_amount.toString()}
           onChange={handleChange}
           className="w-full py-2 px-3 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
           min="0"
-          required
-          aria-invalid={!!state.errors.current_amount}
+          aria-invalid={!!state.errors.opening_amount}
         />
-        {state.errors.current_amount && (
-          <p className="text-xs text-red-600 dark:text-red-400 mt-1">{state.errors.current_amount}</p>
+        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+          Tabungan yang sudah terkumpul sebelum riwayat setoran dicatat.
+        </p>
+        {state.errors.opening_amount && (
+          <p className="text-xs text-red-600 dark:text-red-400 mt-1">{state.errors.opening_amount}</p>
         )}
       </div>
 

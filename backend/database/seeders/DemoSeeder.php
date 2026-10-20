@@ -192,6 +192,7 @@ class DemoSeeder extends Seeder
                 'user_id' => $user->id,
                 'title' => $goal['title'],
                 'target_amount' => $goal['target_amount'],
+                'opening_amount' => $goal['current_amount'],
                 'current_amount' => $goal['current_amount'],
                 'deadline' => $goal['deadline'],
                 'status' => $goal['status'],

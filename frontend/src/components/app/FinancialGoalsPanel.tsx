@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import AddFinancialGoalForm from "@/components/app/AddFinancialGoalForm"
 import EditFinancialGoalForm from "@/components/app/EditFinancialGoalForm"
+import GoalContributions from "@/components/app/GoalContributions"
 import { Badge } from "@/components/ui/badge"
 import {
   deleteFinancialGoal,
@@ -30,40 +31,55 @@ function formatDeadline(date: string | null): string {
 }
 
 function getProgressDisplay(goal: FinancialGoal): number {
-  if (goal.target_amount <= 0) {
+  if (!Number.isFinite(goal.progress_percentage)) {
     return 0
   }
-  return Math.min(Math.max((goal.current_amount / goal.target_amount) * 100, 0), 100)
+
+  return Math.max(goal.progress_percentage, 0)
 }
 
 export default function FinancialGoalsPanel() {
   const [goals, setGoals] = useState<FinancialGoal[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [expandedId, setExpandedId] = useState<number | null>(null)
 
   useEffect(() => {
+    let cancelled = false
+
     async function loadGoals() {
-      setIsLoading(true)
       setError(null)
 
       try {
         const data = await getFinancialGoals()
-        setGoals(data)
+
+        if (!cancelled) {
+          setGoals(data)
+        }
       } catch (error) {
-        setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to load financial goals",
-        )
+        if (!cancelled) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : "Failed to load financial goals",
+          )
+        }
       } finally {
-        setIsLoading(false)
+        if (!cancelled) {
+          setIsLoading(false)
+        }
       }
     }
 
     void loadGoals()
-  }, [])
+
+    return () => {
+      cancelled = true
+    }
+  }, [refreshKey])
 
   function handleCreated(goal: FinancialGoal) {
     setGoals((current) => [goal, ...current])
@@ -93,6 +109,10 @@ export default function FinancialGoalsPanel() {
       setGoals((current) =>
         current.filter((goal) => goal.id !== id),
       )
+
+      if (expandedId === id) {
+        setExpandedId(null)
+      }
     } catch (error) {
       setError(
         error instanceof Error
@@ -104,12 +124,18 @@ export default function FinancialGoalsPanel() {
     }
   }
 
+  function handleContributionsChanged() {
+    setRefreshKey((key) => key + 1)
+  }
+
   return (
     <div className="space-y-5">
       <AddFinancialGoalForm onCreated={handleCreated} />
 
       {error ? (
-        <p className="text-sm text-red-600 dark:text-red-400 mb-2">{error}</p>
+        <p role="alert" className="text-sm text-red-600 dark:text-red-400 mb-2">
+          {error}
+        </p>
       ) : null}
 
       {isLoading ? (
@@ -121,9 +147,11 @@ export default function FinancialGoalsPanel() {
           </p>
         </div>
       ) : goals.length === 0 ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          No financial goals yet
-        </p>
+        error ? null : (
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            No financial goals yet
+          </p>
+        )
       ) : (
         <div className="space-y-4 max-w-full">
           {goals.map((goal) => {
@@ -138,7 +166,10 @@ export default function FinancialGoalsPanel() {
               )
             }
 
-            const progressDisplay = getProgressDisplay(goal)
+            const progressPercentage = getProgressDisplay(goal)
+            const barWidth = Math.min(progressPercentage, 100)
+            const roundedPercentage = Math.round(progressPercentage)
+            const isExpanded = expandedId === goal.id
 
             return (
               <div
@@ -167,50 +198,100 @@ export default function FinancialGoalsPanel() {
                 <div className="mt-3 flex items-end gap-3">
                   <div>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Progress
+                      Terkumpul
                     </p>
 
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {formatCurrency(goal.current_amount)}
+                      {formatCurrency(goal.collected_amount)}
                       {" / "}
                       {formatCurrency(goal.target_amount)}
                     </p>
                   </div>
 
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {Math.round(progressDisplay)}%
+                    {roundedPercentage}%
                   </span>
                 </div>
 
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700">
+                <div
+                  role="progressbar"
+                  aria-label={`Progres ${goal.title}`}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(barWidth)}
+                  aria-valuetext={`${roundedPercentage}% terkumpul`}
+                  className="mt-2 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-700"
+                >
                   <div
                     className="h-full rounded-full bg-gray-900 transition-[width] ease-[width] duration-750 dark:bg-gray-100"
                     style={{
-                      width: `${progressDisplay}%`,
+                      width: `${barWidth}%`,
                     }}
                   />
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2 justify-end">
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 dark:text-gray-400">
+                  <span>Saldo awal: {formatCurrency(goal.opening_amount)}</span>
+                  <span>Setoran: {formatCurrency(goal.contributions_total)}</span>
+                  <span>
+                    {goal.remaining_amount > 0
+                      ? `Sisa: ${formatCurrency(goal.remaining_amount)}`
+                      : "Target tercapai"}
+                  </span>
+                </div>
+
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     type="button"
-                    onClick={() => setEditingId(goal.id)}
-                    className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                    onClick={() =>
+                      setExpandedId(isExpanded ? null : goal.id)
+                    }
+                    aria-expanded={isExpanded}
+                    aria-controls={
+                      isExpanded
+                        ? `goal-contributions-${goal.id}`
+                        : undefined
+                    }
+                    className="self-start rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
                   >
-                    Edit
+                    {isExpanded
+                      ? "Sembunyikan Setoran"
+                      : "Riwayat Setoran"}
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => void handleDelete(goal.id)}
-                    disabled={deletingId === goal.id}
-                    className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
-                  >
-                    {deletingId === goal.id
-                      ? "Deleting..."
-                      : "Delete"}
-                  </button>
+                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setEditingId(goal.id)}
+                      className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleDelete(goal.id)}
+                      disabled={deletingId === goal.id}
+                      className="rounded-md border border-red-200 px-2.5 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                      {deletingId === goal.id
+                        ? "Deleting..."
+                        : "Delete"}
+                    </button>
+                  </div>
                 </div>
+
+                {isExpanded ? (
+                  <div
+                    id={`goal-contributions-${goal.id}`}
+                    className="mt-3 border-t border-gray-100 pt-3 dark:border-gray-700"
+                  >
+                    <GoalContributions
+                      goalId={goal.id}
+                      onChanged={handleContributionsChanged}
+                    />
+                  </div>
+                ) : null}
               </div>
             )
           })}

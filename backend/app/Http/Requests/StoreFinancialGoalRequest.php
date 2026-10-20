@@ -16,6 +16,7 @@ class StoreFinancialGoalRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:150'],
             'target_amount' => ['required', 'integer', 'min:1'],
+            'opening_amount' => ['nullable', 'integer', 'min:0'],
             'current_amount' => ['nullable', 'integer', 'min:0'],
             'deadline' => ['nullable', 'date'],
             'status' => ['nullable', 'in:active,completed,archived'],
