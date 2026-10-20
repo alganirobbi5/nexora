@@ -87,6 +87,67 @@ class AuthTest extends TestCase
         $this->assertAuthenticated('web');
     }
 
+    public function test_login_with_remember_false_succeeds(): void
+    {
+        $user = User::create([
+            'name' => 'Remember False',
+            'email' => 'remember-false@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'remember-false@example.com',
+            'password' => 'password123',
+            'remember' => false,
+        ], $this->spaHeaders());
+
+        $response->assertOk();
+        $response->assertJsonPath('user.email', 'remember-false@example.com');
+
+        $this->assertAuthenticated('web');
+        $this->assertNull($user->fresh()->remember_token);
+    }
+
+    public function test_login_with_remember_true_succeeds(): void
+    {
+        $user = User::create([
+            'name' => 'Remember True',
+            'email' => 'remember-true@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'remember-true@example.com',
+            'password' => 'password123',
+            'remember' => true,
+        ], $this->spaHeaders());
+
+        $response->assertOk();
+        $response->assertJsonPath('user.email', 'remember-true@example.com');
+
+        $this->assertAuthenticated('web');
+        $this->assertNotNull($user->fresh()->remember_token);
+    }
+
+    public function test_remember_must_be_boolean(): void
+    {
+        User::create([
+            'name' => 'Remember Invalid',
+            'email' => 'remember-invalid@example.com',
+            'password' => 'password123',
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => 'remember-invalid@example.com',
+            'password' => 'password123',
+            'remember' => 'not-a-boolean',
+        ], $this->spaHeaders());
+
+        $response->assertStatus(422);
+        $response->assertJsonValidationErrors(['remember']);
+        $this->assertGuest('web');
+    }
+
     public function test_wrong_password_fails(): void
     {
         User::create([

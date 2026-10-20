@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
+use App\Http\Requests\RegisterRequest;
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\JsonResponse;
-use App\Models\User;
-use App\Http\Requests\RegisterRequest;
-use App\Http\Requests\LoginRequest;
 
 class AuthController extends Controller
 {
@@ -38,9 +37,10 @@ class AuthController extends Controller
      */
     public function login(LoginRequest $request): JsonResponse
     {
-        $validated = $request->validated();
-
-        if (!Auth::attempt($validated)) {
+        if (! Auth::attempt(
+            $request->only('email', 'password'),
+            $request->boolean('remember')
+        )) {
             return response()->json(
                 ['message' => 'The provided credentials are incorrect.'],
                 401
