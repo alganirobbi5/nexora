@@ -30,6 +30,37 @@ export interface AuthResponse {
   user: User
 }
 
+export interface DashboardTrendMonth {
+  year: number
+  month: number
+  label: string
+  income: number
+  expenses: number
+  net_cash_flow: number
+}
+
+export interface DashboardCategoryBreakdownItem {
+  category_id: number | null
+  category_name: string
+  amount: number
+  percentage: number
+}
+
+export interface DashboardRecentTransaction {
+  id: number
+  type: "income" | "expense"
+  amount: number
+  description: string | null
+  transaction_date: string
+  category_id: number | null
+  category: {
+    id: number
+    name: string
+    icon: string | null
+    color: string | null
+  } | null
+}
+
 export type ValidationErrors = Record<string, string[]>
 
 export class ApiError extends Error {
@@ -204,14 +235,35 @@ export async function getJson<T>(
 // ==========================================================
 
 export interface DashboardSummary {
-  balance: number
-  income: number
-  expenses: number
+  selected_year: number
+  selected_month: number
+  monthly_income: number
+  monthly_expenses: number
+  net_cash_flow: number
+  six_month_trend: DashboardTrendMonth[]
+  category_breakdown: DashboardCategoryBreakdownItem[]
+  recent_transactions: DashboardRecentTransaction[]
   active_goals: number
 }
 
-export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const response = await authenticatedGet("/api/dashboard")
+export async function getDashboardSummary(
+  year?: number,
+  month?: number,
+): Promise<DashboardSummary> {
+  const params = new URLSearchParams()
+
+  if (year !== undefined) {
+    params.set("year", String(year))
+  }
+
+  if (month !== undefined) {
+    params.set("month", String(month))
+  }
+
+  const query = params.toString()
+  const response = await authenticatedGet(
+    `/api/dashboard${query ? `?${query}` : ""}`,
+  )
 
   return getJson<DashboardSummary>(response)
 }
@@ -366,6 +418,11 @@ export interface FinancialGoal {
   title: string
   target_amount: number
   current_amount: number
+  opening_amount: number
+  contributions_total: number
+  collected_amount: number
+  remaining_amount: number
+  progress_percentage: number
   deadline: string | null
   status: "active" | "completed" | "archived"
   created_at?: string
@@ -375,6 +432,7 @@ export interface FinancialGoal {
 export interface CreateFinancialGoalPayload {
   title: string
   target_amount: number
+  opening_amount?: number
   current_amount?: number
   deadline?: string | null
   status?: "active" | "completed" | "archived"
@@ -383,6 +441,7 @@ export interface CreateFinancialGoalPayload {
 export interface UpdateFinancialGoalPayload {
   title?: string
   target_amount?: number
+  opening_amount?: number
   current_amount?: number
   deadline?: string | null
   status?: "active" | "completed" | "archived"
@@ -430,6 +489,79 @@ export async function deleteFinancialGoal(
 ): Promise<void> {
   const response = await authenticatedDelete(
     `/api/financial-goals/${id}`,
+  )
+
+  await handleResponse(response)
+}
+
+// ==========================================================
+// Financial Goal Contributions
+// ==========================================================
+
+export interface GoalContribution {
+  id: number
+  financial_goal_id: number
+  amount: number
+  contribution_date: string
+  note: string | null
+  created_at?: string
+  updated_at?: string
+}
+
+export interface CreateGoalContributionPayload {
+  amount: number
+  contribution_date: string
+  note?: string | null
+}
+
+export type UpdateGoalContributionPayload =
+  Partial<CreateGoalContributionPayload>
+
+export async function getGoalContributions(
+  goalId: number,
+): Promise<GoalContribution[]> {
+  const response = await authenticatedGet(
+    `/api/financial-goals/${goalId}/contributions`,
+  )
+
+  return getJson<GoalContribution[]>(response)
+}
+
+export async function createGoalContribution(
+  goalId: number,
+  payload: CreateGoalContributionPayload,
+): Promise<GoalContribution> {
+  const response = await authenticatedPost(
+    `/api/financial-goals/${goalId}/contributions`,
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<GoalContribution>(response)
+}
+
+export async function updateGoalContribution(
+  goalId: number,
+  contributionId: number,
+  payload: UpdateGoalContributionPayload,
+): Promise<GoalContribution> {
+  const response = await authenticatedPut(
+    `/api/financial-goals/${goalId}/contributions/${contributionId}`,
+    {
+      body: JSON.stringify(payload),
+    },
+  )
+
+  return getJson<GoalContribution>(response)
+}
+
+export async function deleteGoalContribution(
+  goalId: number,
+  contributionId: number,
+): Promise<void> {
+  const response = await authenticatedDelete(
+    `/api/financial-goals/${goalId}/contributions/${contributionId}`,
   )
 
   await handleResponse(response)
@@ -499,6 +631,99 @@ export async function deleteTask(
 ): Promise<void> {
   const response = await authenticatedDelete(
     `/api/tasks/${id}`,
+  )
+
+  await handleResponse(response)
+}
+
+// ==========================================================
+// Budgets
+// ==========================================================
+
+export interface BudgetCategory {
+  id: number
+  user_id: number
+  name: string
+  type: "income" | "expense"
+  icon?: string | null
+  color?: string | null
+}
+
+export interface Budget {
+  id: number
+  category_id: number
+  category: BudgetCategory
+  year: number
+  month: number
+  limit_amount: string | number
+  used_amount: number
+  remaining_amount: number
+  overspent_amount: number
+  percentage: number
+  status: string
+  status_color: string
+}
+
+export interface BudgetsResponse {
+  selected_month: number
+  selected_year: number
+  budgets: Budget[]
+}
+
+export interface CreateBudgetPayload {
+  category_id: number
+  year: number
+  month: number
+  limit_amount: number
+}
+
+export type UpdateBudgetPayload = Partial<CreateBudgetPayload>
+
+export interface BudgetMutationResult {
+  id: number
+  category_id: number
+  category: BudgetCategory
+  year: number
+  month: number
+  limit_amount: string | number
+  message: string
+}
+
+export async function getBudgets(
+  year: number,
+  month: number,
+): Promise<BudgetsResponse> {
+  const response = await authenticatedGet(
+    `/api/budgets?year=${year}&month=${month}`,
+  )
+
+  return getJson<BudgetsResponse>(response)
+}
+
+export async function createBudget(
+  payload: CreateBudgetPayload,
+): Promise<BudgetMutationResult> {
+  const response = await authenticatedPost("/api/budgets", {
+    body: JSON.stringify(payload),
+  })
+
+  return getJson<BudgetMutationResult>(response)
+}
+
+export async function updateBudget(
+  id: number,
+  payload: UpdateBudgetPayload,
+): Promise<BudgetMutationResult> {
+  const response = await authenticatedPut(`/api/budgets/${id}`, {
+    body: JSON.stringify(payload),
+  })
+
+  return getJson<BudgetMutationResult>(response)
+}
+
+export async function deleteBudget(id: number): Promise<void> {
+  const response = await authenticatedDelete(
+    `/api/budgets/${id}`,
   )
 
   await handleResponse(response)
